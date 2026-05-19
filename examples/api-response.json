@@ -1,0 +1,42 @@
+{
+  "data": [
+    {
+      "id": "order_001",
+      "status": "delivered",
+      "created_at": "2024-06-01T10:00:00Z",
+      "total": 129.95,
+      "customer_name": "Bob Martinez",
+      "items": [
+        { "name": "Wireless Headphones", "qty": 1, "price": 89.99 },
+        { "name": "USB-C Cable", "qty": 2, "price": 19.99 }
+      ],
+      "shipping_address": {
+        "city": "Chicago",
+        "country": "US"
+      }
+    },
+    {
+      "id": "order_002",
+      "status": "processing",
+      "created_at": "2024-06-28T09:15:00Z",
+      "total": 249.00,
+      "customer_name": "Clara Kim",
+      "items": [
+        { "name": "Mechanical Keyboard", "qty": 1, "price": 249.00 }
+      ],
+      "shipping_address": {
+        "city": "Austin",
+        "country": "US"
+      }
+    }
+  ],
+  "meta": {
+    "total": 2,
+    "page": 1,
+    "per_page": 20
+  },
+  "links": {
+    "self": "https://api.example.com/orders?page=1",
+    "next": null
+  }
+}

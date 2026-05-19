@@ -1,0 +1,36 @@
+{
+  "user": {
+    "id": "usr_8f2a1c9d",
+    "name": "Alice Rosenberg",
+    "email": "alice@example.com",
+    "age": 29,
+    "phone": "+1-555-0147",
+    "premium": true,
+    "created_at": "2023-06-15T08:30:00Z",
+    "address": {
+      "city": "San Francisco",
+      "country": "United States",
+      "zip": "94105"
+    },
+    "preferences": {
+      "theme": "dark",
+      "notifications": true,
+      "language": "en"
+    },
+    "tags": ["designer", "beta-tester", "early-adopter"]
+  },
+  "subscription": {
+    "plan": "Pro",
+    "status": "active",
+    "price": 49.99,
+    "billing_cycle": "monthly",
+    "next_billing_date": "2024-07-15T00:00:00Z",
+    "features": ["unlimited_projects", "ai_assistant", "priority_support"]
+  },
+  "stats": {
+    "total_projects": 42,
+    "storage_used_gb": 3.7,
+    "last_login": "2024-06-28T14:22:00Z",
+    "rating": 4.8
+  }
+}
