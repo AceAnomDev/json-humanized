@@ -1,0 +1,71 @@
+{
+  "name": "json-humanized",
+  "version": "2.0.0",
+  "description": "Transform any JSON/YAML/TOML into human-readable prose — powered by Claude AI, OpenAI, Ollama, or built-in rule-based engine",
+  "main": "src/index.js",
+  "types": "index.d.ts",
+  "bin": {
+    "json-humanized": "./bin/cli.js",
+    "jh": "./bin/cli.js"
+  },
+  "type": "commonjs",
+  "scripts": {
+    "test": "node test/index.test.js",
+    "example": "node examples/demo.js",
+    "lint": "echo 'No linter configured'",
+    "cache:clear": "node -e \"require('./src/cache').clearCache(); console.log('Cache cleared')\"",
+    "cache:stats": "node -e \"const s=require('./src/cache').cacheStats(); console.log(s)\""
+  },
+  "keywords": [
+    "json",
+    "yaml",
+    "toml",
+    "human-readable",
+    "nlp",
+    "cli",
+    "ai",
+    "claude",
+    "openai",
+    "ollama",
+    "text-generation",
+    "data-description",
+    "json-to-text",
+    "diff",
+    "watch",
+    "developer-tools"
+  ],
+  "author": "json-humanized contributors",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "4.1.2",
+    "commander": "11.1.0",
+    "ora": "5.4.1"
+  },
+  "optionalDependencies": {
+    "@anthropic-ai/sdk": "^0.20.0",
+    "openai": "^4.0.0",
+    "js-yaml": "^4.1.0",
+    "@iarna/toml": "^2.2.5",
+    "handlebars": "^4.7.8"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "examples/",
+    "docs/",
+    "index.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AceAnomDev/json-humanized.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AceAnomDev/json-humanized/issues"
+  },
+  "homepage": "https://github.com/AceAnomDev/json-humanized#readme"
+}

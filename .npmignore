@@ -1,0 +1,8 @@
+test/
+.github/
+docs/
+.env
+.env.local
+*.log
+coverage/
+.nyc_output/
