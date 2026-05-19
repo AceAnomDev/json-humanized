@@ -1,8 +1,8 @@
 <div align="center">
 
-# json-humanized
+# 🗣️ json-humanized
 
-**Transform any JSON / YAML / TOML into natural human language**
+**📢Transform any JSON / YAML / TOML into natural human language**
 
 [![npm version](https://img.shields.io/npm/v/json-humanized?color=00e5ff&style=flat-square)](https://www.npmjs.com/package/json-humanized)
 [![CI](https://img.shields.io/github/actions/workflow/status/AceAnomDev/json-humanized/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/AceAnomDev/json-humanized/actions)
