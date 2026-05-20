@@ -14,12 +14,8 @@ const TYPE_LABELS = {
   null:    'empty value',
 };
 
-/**
- * Detect semantic meaning from a key name
- */
 function detectKeyContext(key) {
   const k = key.toLowerCase();
-
   if (/^(id|uuid|guid|_id)$/.test(k))          return 'identifier';
   if (/(_id|Id)$/.test(key))                    return 'reference';
   if (/(created|updated|modified|timestamp|date|time|at)$/i.test(k)) return 'datetime';
@@ -42,30 +38,23 @@ function detectKeyContext(key) {
   if (/(address|city|country|region|zip|postal)/i.test(k)) return 'location';
   if (/(rating|score|rank)/i.test(k))           return 'rating';
   if (/(error|err|exception|message|msg)/i.test(k)) return 'error';
-
   return 'generic';
 }
 
-/**
- * Format a key name into natural English label
- */
 function humanizeKey(key) {
   return key
-    .replace(/([A-Z])/g, ' $1')          // camelCase → spaced
-    .replace(/[_\-\.]+/g, ' ')           // snake_case / kebab-case → spaced
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/[_\-\.]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
     .toLowerCase();
 }
 
-/**
- * Format a value with contextual awareness
- */
 function humanizeValue(value, key = '', depth = 0) {
   if (value === null || value === undefined) return 'not specified';
   if (value === '') return 'empty';
 
-  const ctx = detectKeyContext(key);
+  const ctx  = detectKeyContext(key);
   const type = typeof value;
 
   if (type === 'boolean') {
@@ -98,13 +87,8 @@ function humanizeValue(value, key = '', depth = 0) {
     return value;
   }
 
-  if (Array.isArray(value)) {
-    return humanizeArray(value, key, depth);
-  }
-
-  if (type === 'object') {
-    return humanizeObject(value, depth + 1);
-  }
+  if (Array.isArray(value)) return humanizeArray(value, key, depth);
+  if (type === 'object')    return humanizeObject(value, depth + 1);
 
   return String(value);
 }
@@ -128,17 +112,13 @@ function formatDatetime(str) {
   }
 }
 
-/**
- * Humanize an array value
- */
 function humanizeArray(arr, key = '', depth = 0) {
   if (arr.length === 0) return 'an empty list';
 
-  const itemType = typeof arr[0];
+  const itemType    = typeof arr[0];
   const allSameType = arr.every(i => typeof i === itemType);
-  const label = humanizeKey(key) || 'items';
+  const label       = humanizeKey(key) || 'items';
 
-  // Simple scalar arrays → inline sentence
   if (allSameType && ['string', 'number', 'boolean'].includes(itemType) && arr.length <= 8) {
     const formatted = arr.map(v => humanizeValue(v, '', depth));
     if (formatted.length === 1) return formatted[0];
@@ -146,20 +126,16 @@ function humanizeArray(arr, key = '', depth = 0) {
     return `${formatted.join(', ')} and ${last}`;
   }
 
-  // Complex arrays → count + describe first element
   const preview = humanizeValue(arr[0], '', depth + 1);
   return `a collection of ${arr.length} ${label} (e.g. ${preview}${arr.length > 1 ? ', and more' : ''})`;
 }
 
-/**
- * Humanize an object recursively, returns array of sentences
- */
 function humanizeObject(obj, depth = 0) {
   const entries = Object.entries(obj).filter(([, v]) => v !== undefined);
   if (entries.length === 0) return 'an empty object';
 
   const sentences = [];
-  const indent = '  '.repeat(depth);
+  const indent    = '  '.repeat(depth);
 
   for (const [key, value] of entries) {
     const label = humanizeKey(key);
@@ -174,20 +150,16 @@ function humanizeObject(obj, depth = 0) {
         sentences.push(`${indent}• ${capitalize(label)}: ${value.length} entr${value.length === 1 ? 'y' : 'ies'}`);
         value.slice(0, 5).forEach((item, i) => {
           if (typeof item === 'object' && item !== null) {
-            const sub = humanizeObject(item, depth + 1);
-            sentences.push(`${indent}  [${i + 1}] ${sub}`);
+            sentences.push(`${indent}  [${i + 1}] ${humanizeObject(item, depth + 1)}`);
           } else {
             sentences.push(`${indent}  [${i + 1}] ${humanizeValue(item, '', depth + 1)}`);
           }
         });
-        if (value.length > 5) {
-          sentences.push(`${indent}  … and ${value.length - 5} more`);
-        }
+        if (value.length > 5) sentences.push(`${indent}  … and ${value.length - 5} more`);
       }
     } else if (typeof value === 'object' && value !== null) {
       sentences.push(`${indent}• ${capitalize(label)}:`);
-      const sub = humanizeObject(value, depth + 1);
-      sentences.push(sub);
+      sentences.push(humanizeObject(value, depth + 1));
     } else {
       const hval = humanizeValue(value, key, depth);
       if (ctx === 'identifier') {
@@ -213,70 +185,86 @@ function capitalize(str) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Top-level entry point
+//  Top-level shape detection
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Detect what kind of structure this JSON represents
- */
 function detectTopLevelShape(data) {
   if (Array.isArray(data)) {
     if (data.length === 0) return { shape: 'empty-array' };
-    const first = data[0];
-    if (typeof first === 'object' && first !== null) return { shape: 'record-list', count: data.length };
+    if (typeof data[0] === 'object' && data[0] !== null)
+      return { shape: 'record-list', count: data.length };
     return { shape: 'scalar-list', count: data.length };
   }
   if (typeof data === 'object' && data !== null) {
     const keys = Object.keys(data);
-    // Detect common API shapes
-    if ('data' in data && ('meta' in data || 'links' in data || 'pagination' in data)) return { shape: 'api-response' };
-    if ('error' in data || 'errors' in data || 'message' in data && 'code' in data) return { shape: 'error-response' };
-    if ('users' in data || 'items' in data || 'results' in data || 'records' in data) return { shape: 'collection' };
-    if (keys.length <= 2) return { shape: 'simple-object' };
+    if ('data' in data && ('meta' in data || 'links' in data || 'pagination' in data))
+      return { shape: 'api-response' };
+    if ('error' in data || 'errors' in data || ('message' in data && 'code' in data))
+      return { shape: 'error-response' };
+    if ('users' in data || 'items' in data || 'results' in data || 'records' in data)
+      return { shape: 'collection' };
+    if (keys.length <= 2)
+      return { shape: 'simple-object' };
     return { shape: 'complex-object', keys: keys.length };
   }
   return { shape: 'primitive' };
 }
 
 /**
- * Build a natural-language introduction for the top-level shape
+ * Returns a format label for use in intro sentences.
+ * @param {'json'|'yaml'|'toml'|string} [sourceFormat]
  */
-function buildIntro(data, shape) {
-  switch (shape.shape) {
-    case 'empty-array':
-      return 'This JSON contains an empty list with no items.';
-    case 'record-list':
-      return `This JSON contains a list of ${shape.count} record${shape.count !== 1 ? 's' : ''}.`;
-    case 'scalar-list':
-      return `This JSON contains a list of ${shape.count} value${shape.count !== 1 ? 's' : ''}.`;
-    case 'api-response':
-      return 'This JSON is an API response with data and metadata.';
-    case 'error-response':
-      return 'This JSON describes an error or failure response.';
-    case 'collection':
-      return 'This JSON contains a collection of resources.';
-    case 'simple-object':
-      return 'This JSON contains a simple object with a few fields.';
-    case 'complex-object':
-      return `This JSON contains a structured object with ${shape.keys} fields.`;
-    case 'primitive':
-      return `This JSON contains a single value: ${String(data)}.`;
-    default:
-      return 'This JSON contains the following data:';
+function formatLabel(sourceFormat) {
+  switch ((sourceFormat || 'json').toLowerCase()) {
+    case 'yaml': case 'yml': return 'YAML';
+    case 'toml':             return 'TOML';
+    default:                 return 'data';
   }
 }
 
+function buildIntro(data, shape, sourceFormat) {
+  const lbl = formatLabel(sourceFormat);
+
+  switch (shape.shape) {
+    case 'empty-array':
+      return `This ${lbl} contains an empty list with no items.`;
+    case 'record-list':
+      return `This ${lbl} contains a list of ${shape.count} record${shape.count !== 1 ? 's' : ''}.`;
+    case 'scalar-list':
+      return `This ${lbl} contains a list of ${shape.count} value${shape.count !== 1 ? 's' : ''}.`;
+    case 'api-response':
+      return `This ${lbl} is an API response with data and metadata.`;
+    case 'error-response':
+      return `This ${lbl} describes an error or failure response.`;
+    case 'collection':
+      return `This ${lbl} contains a collection of resources.`;
+    case 'simple-object':
+      return `This ${lbl} contains a simple object with a few fields.`;
+    case 'complex-object':
+      return `This ${lbl} contains a structured object with ${shape.keys} fields.`;
+    case 'primitive':
+      return `This ${lbl} contains a single value: ${String(data)}.`;
+    default:
+      return `This ${lbl} contains the following data:`;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Main export
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
- * Generate a human-readable summary using the rule-based engine
+ * @param {any}    data
+ * @param {object} [options]
+ * @param {string} [options.mode='structured']
+ * @param {string} [options.sourceFormat]  'json' | 'yaml' | 'toml'
  */
 function humanizeLocal(data, options = {}) {
-  const { mode = 'structured', maxDepth = 10 } = options;
+  const { mode = 'structured', sourceFormat } = options;
   const shape = detectTopLevelShape(data);
-  const intro = buildIntro(data, shape);
+  const intro = buildIntro(data, shape, sourceFormat);
 
-  if (shape.shape === 'primitive') {
-    return intro;
-  }
+  if (shape.shape === 'primitive') return intro;
 
   let body = '';
 
