@@ -78,11 +78,13 @@ async function humanize(data, options = {}) {
     cacheTTL   = 3600,
   } = merged;
 
+  const sourceFormat = merged.sourceFormat || null;
+
   const engineFn = async () => {
     if (engine === 'ai') {
       return humanizeWithAI(data, { apiKey, aiProvider, mode, lang, context, maxChars, ...merged });
     }
-    return humanizeLocal(data, { mode });
+    return humanizeLocal(data, { mode, sourceFormat });
   };
 
   // Use cache only for AI engine (local is instant)
@@ -91,7 +93,7 @@ async function humanize(data, options = {}) {
     : await engineFn();
 
   const stats = computeStats(data);
-  const meta  = { engine, aiProvider, filename, timestamp: new Date().toISOString(), stats, data };
+  const meta  = { engine, aiProvider, filename, sourceFormat, timestamp: new Date().toISOString(), stats, data };
 
   // Template output takes priority over standard formatters
   if (template) {
@@ -119,9 +121,13 @@ async function humanizeFile(filePath, options = {}) {
 
   const data = parseFile(resolved);
 
+  const ext = path.extname(resolved).slice(1).toLowerCase();
+  const sourceFormat = ['yaml', 'yml', 'toml', 'json'].includes(ext) ? ext : undefined;
+
   return humanize(data, {
     ...options,
     filename: options.filename || path.basename(resolved),
+    sourceFormat: options.sourceFormat || sourceFormat,
   });
 }
 
