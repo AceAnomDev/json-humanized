@@ -92,7 +92,42 @@ async function run() {
   // Format tests
   await test('markdown format has headers', async () => {
     const r = await humanize({ key: 'value' }, { format: 'markdown' });
-    assertContains(r, '# JSON Analysis');
+    assertContains(r, '# Data Analysis');
+  });
+
+  await test('markdown uses YAML label for yaml source', async () => {
+    const r = await humanize({ key: 'value' }, { format: 'markdown', sourceFormat: 'yaml' });
+    assertContains(r, '# YAML Analysis');
+  });
+
+  await test('markdown uses TOML label for toml source', async () => {
+    const r = await humanize({ key: 'value' }, { format: 'markdown', sourceFormat: 'toml' });
+    assertContains(r, '# TOML Analysis');
+  });
+
+  await test('humanizer says YAML data for yaml source', async () => {
+    const r = await humanize({ name: 'Alice' }, { sourceFormat: 'yaml' });
+    assertContains(r, 'YAML');
+  });
+
+  await test('humanizer says TOML data for toml source', async () => {
+    const r = await humanize({ name: 'Bob' }, { sourceFormat: 'toml' });
+    assertContains(r, 'TOML');
+  });
+
+  await test('markdown uses YAML label for yaml source', async () => {
+    const r = await humanize({ key: 'value' }, { format: 'markdown', sourceFormat: 'yaml' });
+    assertContains(r, '# YAML Analysis');
+  });
+
+  await test('markdown uses TOML label for toml source', async () => {
+    const r = await humanize({ key: 'value' }, { format: 'markdown', sourceFormat: 'toml' });
+    assertContains(r, '# TOML Analysis');
+  });
+
+  await test('story uses YAML label', async () => {
+    const r = await humanize({ key: 'value' }, { format: 'story', sourceFormat: 'yaml' });
+    assertContains(r, 'YAML STORY');
   });
 
   await test('story format has border', async () => {
