@@ -1,6 +1,6 @@
 {
   "name": "json-humanized",
-  "version": "2.0.0",
+  "version": "^2.0.0",
   "description": "Transform any JSON/YAML/TOML into human-readable prose — powered by Claude AI, OpenAI, Ollama, or built-in rule-based engine",
   "main": "src/index.js",
   "types": "index.d.ts",
