@@ -4,9 +4,19 @@
 //  json-humanized · Output formatters
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Plain text formatter (default)
- */
+/** Derive a readable label from sourceFormat option or filename extension */
+function sourceLabel(meta = {}) {
+  const sf = (meta.sourceFormat || '').toLowerCase();
+  if (sf === 'yaml' || sf === 'yml') return 'YAML';
+  if (sf === 'toml')                 return 'TOML';
+  if (sf === 'json')                 return 'JSON';
+  const ext = (meta.filename || '').split('.').pop().toLowerCase();
+  if (ext === 'yaml' || ext === 'yml') return 'YAML';
+  if (ext === 'toml')                  return 'TOML';
+  if (ext === 'json')                  return 'JSON';
+  return 'Data';
+}
+
 function formatPlain(text, meta = {}) {
   const lines = [];
   if (meta.filename) {
@@ -21,19 +31,14 @@ function formatPlain(text, meta = {}) {
   return lines.join('\n');
 }
 
-/**
- * Markdown formatter
- */
 function formatMarkdown(text, meta = {}) {
+  const lbl   = sourceLabel(meta);
   const lines = [];
 
-  if (meta.filename) {
-    lines.push(`# JSON Analysis: \`${meta.filename}\``);
-    lines.push('');
-  } else {
-    lines.push('# JSON Analysis');
-    lines.push('');
-  }
+  lines.push(meta.filename
+    ? `# ${lbl} Analysis: \`${meta.filename}\``
+    : `# ${lbl} Analysis`);
+  lines.push('');
 
   if (meta.timestamp) {
     lines.push(`> Generated on ${new Date(meta.timestamp).toLocaleString()}`);
@@ -64,43 +69,32 @@ function formatMarkdown(text, meta = {}) {
   return lines.join('\n');
 }
 
-/**
- * Story/narrative formatter — wraps output in a storytelling frame
- */
 function formatStory(text, meta = {}) {
+  const lbl   = sourceLabel(meta);
   const lines = [];
   lines.push('━'.repeat(60));
-  lines.push('  📖  THE DATA STORY');
+  lines.push(`  📖  THE ${lbl.toUpperCase()} STORY`);
   lines.push('━'.repeat(60));
   lines.push('');
   lines.push(text);
   lines.push('');
   lines.push('━'.repeat(60));
-  if (meta.filename) {
-    lines.push(`  Source: ${meta.filename}`);
-  }
+  if (meta.filename) lines.push(`  Source: ${meta.filename}`);
   return lines.join('\n');
 }
 
-/**
- * JSON formatter — outputs structured metadata alongside the description
- */
 function formatJSON(text, meta = {}) {
-  const output = {
+  return JSON.stringify({
     humanized: text,
     metadata: {
-      engine: meta.engine || 'local',
-      filename: meta.filename || null,
+      engine:    meta.engine    || 'local',
+      filename:  meta.filename  || null,
       timestamp: meta.timestamp || new Date().toISOString(),
-      stats: meta.stats || {},
+      stats:     meta.stats     || {},
     },
-  };
-  return JSON.stringify(output, null, 2);
+  }, null, 2);
 }
 
-/**
- * Apply a named formatter
- */
 function applyFormat(text, format = 'plain', meta = {}) {
   switch (format) {
     case 'markdown': return formatMarkdown(text, meta);
