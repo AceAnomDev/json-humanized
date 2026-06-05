@@ -10,11 +10,10 @@
 [![license](https://img.shields.io/npm/l/json-humanized?style=flat-square)](LICENSE)
 [![node](https://img.shields.io/node/v/json-humanized?style=flat-square&color=339933)](package.json)
 
-**[🌐 Live Demo](https://aceanomdev.github.io/json-humanized/)** &nbsp;·&nbsp;
+**[🌐 Live Demo](https://aceanomdev.github.io/json-humanized/)** &nbsp;·&nbsp; 
 **[📦 npm](https://www.npmjs.com/package/json-humanized)** &nbsp;·&nbsp;
-**[📖 Docs](https://aceanomdeve.github.io/json-humanized/)** &nbsp;·&nbsp;
 **[🐛 Issues](https://github.com/AceAnomDev/json-humanized/issues)**
-
+· [Installation](#installation) · [Usage](#usage) · [API](#api) · [Config](#config-file)
 </div>
 
 ---
