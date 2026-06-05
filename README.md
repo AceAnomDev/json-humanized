@@ -10,11 +10,18 @@
 [![license](https://img.shields.io/npm/l/json-humanized?style=flat-square)](LICENSE)
 [![node](https://img.shields.io/node/v/json-humanized?style=flat-square&color=339933)](package.json)
 
+**[🌐 Live Demo](https://aceanomdeve.github.io/json-humanized/)** &nbsp;·&nbsp;
+**[📦 npm](https://www.npmjs.com/package/json-humanized)** &nbsp;·&nbsp;
+**[📖 Docs](https://aceanomdeve.github.io/json-humanized/)** &nbsp;·&nbsp;
+**[🐛 Issues](https://github.com/AceAnomDev/json-humanized/issues)**
+
 </div>
 
 ---
 
 ## What it does
+
+> **[🌐 Try it live →](https://aceanomdeve.github.io/json-humanized/)**
 
 ```bash
 $ jh user.json
@@ -51,6 +58,8 @@ npx json-humanized data.json
 ---
 
 ## Usage
+
+> **[🌐 Try it in the browser →](https://aceanomdeve.github.io/json-humanized/)** — no install needed.
 
 ### CLI
 
