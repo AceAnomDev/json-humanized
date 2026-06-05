@@ -20,7 +20,7 @@
 
 ## What it does
 
-> **[🌐 Try it live →](https://aceanomdeve.github.io/json-humanized/)**
+> **[🌐 Try it live →](https://aceanomdev.github.io/json-humanized/)**
 
 ```bash
 $ jh user.json
@@ -58,7 +58,7 @@ npx json-humanized data.json
 
 ## Usage
 
-> **[🌐 Try it in the browser →](https://aceanomdeve.github.io/json-humanized/)** — no install needed.
+> **[🌐 Try it in the browser →](https://aceanomdev.github.io/json-humanized/)** — no install needed.
 
 ### CLI
 
