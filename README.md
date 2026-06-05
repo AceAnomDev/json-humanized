@@ -4,6 +4,8 @@
 
 **Transform any JSON / YAML / TOML into natural human language**
 
+[![CI](https://github.com/AceAnomDev/json-humanized/actions/workflows/ci.yml/badge.svg)](https://github.com/AceAnomDev/json-humanized/actions/workflows/ci.yml)
+[![npm downloads](https://img.shields.io/npm/dm/json-humanized?style=flat-square&color=00e5ff)](https://www.npmjs.com/package/json-humanized)
 [![npm version](https://img.shields.io/npm/v/json-humanized?color=00e5ff&style=flat-square)](https://www.npmjs.com/package/json-humanized)
 [![license](https://img.shields.io/npm/l/json-humanized?style=flat-square)](LICENSE)
 [![node](https://img.shields.io/node/v/json-humanized?style=flat-square&color=339933)](package.json)
