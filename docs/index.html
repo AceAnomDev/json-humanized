@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>json-humanized — Live Demo</title>
+<!-- js-yaml for YAML parsing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;700;800&display=swap');
+  :root {
+    --bg:#0d0d12; --panel:#14141f; --border:#252535;
+    --cyan:#00e5ff; --green:#00ff9d; --yellow:#ffd166;
+    --red:#ff6b6b; --text:#e0e0f0; --muted:#6060a0;
+    --radius:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;display:grid;grid-template-rows:auto 1fr auto}
+  header{padding:28px 48px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  header h1{font-size:1.5rem;font-weight:800;letter-spacing:-.03em}
+  header h1 span{color:var(--cyan)}
+  .badge{font-family:'JetBrains Mono',monospace;font-size:.7rem;background:var(--cyan)22;color:var(--cyan);border:1px solid var(--cyan)44;padding:3px 10px;border-radius:99px}
+  .links{margin-left:auto;display:flex;gap:12px}
+  .links a{font-size:.8rem;color:var(--muted);text-decoration:none;transition:color .2s}
+  .links a:hover{color:var(--cyan)}
+  main{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  .pane{padding:28px 36px;display:flex;flex-direction:column;gap:14px}
+  .pane+.pane{border-left:1px solid var(--border)}
+  .pane-label{font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .dot{width:8px;height:8px;border-radius:50%}
+  .dot-cyan{background:var(--cyan)}.dot-green{background:var(--green)}
+  /* format tabs */
+  .format-tabs{display:flex;gap:6px;border-bottom:1px solid var(--border);padding-bottom:10px}
+  .tab{background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 14px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:.72rem;cursor:pointer;transition:all .2s;text-transform:uppercase;letter-spacing:.06em}
+  .tab.active{border-color:var(--cyan);color:var(--cyan);background:var(--cyan)11}
+  .tab:hover:not(.active){border-color:var(--border);color:var(--text)}
+  textarea,#output{flex:1;min-height:320px;font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:1.75;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:18px;color:var(--text);resize:none;outline:none;transition:border-color .2s}
+  textarea:focus{border-color:var(--cyan)66}
+  #output{white-space:pre-wrap;overflow-y:auto;color:#c0c0e0}
+  #output.placeholder{color:var(--muted);font-style:italic}
+  #output.loading{color:var(--cyan);animation:pulse 1s ease-in-out infinite}
+  #output.error{color:var(--red)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+  .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  select{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-family:'Syne',sans-serif;font-size:.8rem;outline:none;cursor:pointer;transition:border-color .2s}
+  select:hover{border-color:var(--cyan)55}
+  #run-btn{margin-left:auto;background:var(--cyan);color:#000;border:none;padding:10px 28px;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;transition:transform .15s,opacity .15s;letter-spacing:.04em}
+  #run-btn:hover{opacity:.9;transform:translateY(-1px)}
+  #run-btn:active{transform:translateY(0)}
+  #run-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .samples{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .sample-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:.7rem;cursor:pointer;transition:all .2s}
+  .sample-btn:hover{border-color:var(--cyan)66;color:var(--cyan)}
+  .info-bar{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--muted);padding:6px 12px;background:var(--panel);border:1px solid var(--border);border-radius:6px;display:flex;gap:14px;flex-wrap:wrap}
+  .info-bar .ok{color:var(--green)}.info-bar .bad{color:var(--red)}.info-bar .hi{color:var(--cyan)}
+  footer{padding:14px 48px;border-top:1px solid var(--border);font-size:.72rem;color:var(--muted);display:flex;justify-content:space-between}
+  footer a{color:var(--muted);text-decoration:none}.footer a:hover{color:var(--cyan)}
+  .copy-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:.7rem;cursor:pointer;transition:all .2s;margin-left:auto}
+  .copy-btn:hover{border-color:var(--green)66;color:var(--green)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>json-<span>humanized</span></h1>
+  <span class="badge">v2.2.0</span>
+  <div class="links">
+    <a href="https://github.com/AceAnomDev/json-humanized" target="_blank">GitHub</a>
+    <a href="https://www.npmjs.com/package/json-humanized" target="_blank">npm</a>
+  </div>
+</header>
+
+<main>
+  <!-- INPUT -->
+  <div class="pane">
+    <div class="pane-label"><span class="dot dot-cyan"></span>Input</div>
+
+    <!-- format tabs -->
+    <div class="format-tabs">
+      <button class="tab active" onclick="switchInputFormat('json')">JSON</button>
+      <button class="tab"        onclick="switchInputFormat('yaml')">YAML</button>
+      <button class="tab"        onclick="switchInputFormat('toml')">TOML</button>
+    </div>
+
+    <div class="samples">
+      <span style="font-size:.7rem;color:var(--muted)">Examples:</span>
+      <button class="sample-btn" onclick="loadSample('user')">user</button>
+      <button class="sample-btn" onclick="loadSample('api')">api</button>
+      <button class="sample-btn" onclick="loadSample('error')">error</button>
+      <button class="sample-btn" onclick="loadSample('list')">list</button>
+    </div>
+
+    <textarea id="input" spellcheck="false" placeholder="Paste JSON, YAML, or TOML here…"></textarea>
+
+    <div class="controls">
+      <select id="sel-format">
+        <option value="plain">plain</option>
+        <option value="markdown">markdown</option>
+        <option value="story">story</option>
+        <option value="sentence">sentence</option>
+        <option value="csv">csv</option>
+        <option value="html">html</option>
+      </select>
+      <select id="sel-mode">
+        <option value="structured">structured</option>
+        <option value="prose">prose</option>
+      </select>
+      <span style="font-size:.72rem;color:var(--muted);font-family:'JetBrains Mono',monospace">Ctrl+↵</span>
+      <button id="run-btn" onclick="run()">Humanize →</button>
+    </div>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="pane">
+    <div class="pane-label">
+      <span class="dot dot-green"></span>Output
+      <button class="copy-btn" onclick="copyOutput()">copy</button>
+    </div>
+    <div id="output" class="placeholder">Your output will appear here…</div>
+    <div class="info-bar">
+      <span id="s-fmt">format: —</span>
+      <span id="s-type">type: —</span>
+      <span id="s-keys">fields: —</span>
+      <span id="s-time">time: —</span>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <span>json-humanized · MIT</span>
+  <span><a href="https://github.com/AceAnomDev/json-humanized/issues" target="_blank">Report issue</a></span>
+</footer>
+
+<script>
+// ── samples per format ────────────────────────────────────────────────────────
+const SAMPLES = {
+  json: {
+    user: `{
+  "id": "usr_8f3k2",
+  "name": "Alice Johnson",
+  "email": "alice@example.com",
+  "age": 28,
+  "password": "hunter2",
+  "created_at": "2024-03-15T10:30:00Z",
+  "balance": 4250.75,
+  "is_active": true,
+  "address": { "city": "San Francisco", "country": "US" },
+  "tags": ["premium", "early-adopter"]
+}`,
+    api: `{
+  "data": {
+    "results": [
+      { "id": 1, "title": "Intro to AI", "score": 9.2 },
+      { "id": 2, "title": "ML 101",      "score": 8.7 }
+    ],
+    "total": 42
+  },
+  "meta": { "page": 1, "per_page": 2, "took_ms": 34 },
+  "links": { "next": "/api/v1/courses?page=2" }
+}`,
+    error: `{
+  "error": {
+    "code": 422,
+    "message": "Validation failed",
+    "details": [
+      { "field": "email", "reason": "Invalid email format" },
+      { "field": "age",   "reason": "Must be between 18 and 120" }
+    ]
+  },
+  "request_id": "req_7fh2k"
+}`,
+    list: `[
+  { "user_id": "u1", "name": "Bob",   "score": 98, "country": "UK" },
+  { "user_id": "u2", "name": "Carol", "score": 87, "country": "DE" },
+  { "user_id": "u3", "name": "Dave",  "score": 73, "country": "US" }
+]`,
+  },
+
+  yaml: {
+    user: `id: usr_8f3k2
+name: Alice Johnson
+email: alice@example.com
+age: 28
+password: hunter2
+created_at: "2024-03-15T10:30:00Z"
+balance: 4250.75
+is_active: true
+address:
+  city: San Francisco
+  country: US
+tags:
+  - premium
+  - early-adopter`,
+    api: `data:
+  results:
+    - id: 1
+      title: Intro to AI
+      score: 9.2
+    - id: 2
+      title: ML 101
+      score: 8.7
+  total: 42
+meta:
+  page: 1
+  per_page: 2
+  took_ms: 34
+links:
+  next: /api/v1/courses?page=2`,
+    error: `error:
+  code: 422
+  message: Validation failed
+  details:
+    - field: email
+      reason: Invalid email format
+    - field: age
+      reason: Must be between 18 and 120
+request_id: req_7fh2k`,
+    list: `- user_id: u1
+  name: Bob
+  score: 98
+  country: UK
+- user_id: u2
+  name: Carol
+  score: 87
+  country: DE
+- user_id: u3
+  name: Dave
+  score: 73
+  country: US`,
+  },
+
+  toml: {
+    user: `id = "usr_8f3k2"
+name = "Alice Johnson"
+email = "alice@example.com"
+age = 28
+password = "hunter2"
+created_at = "2024-03-15T10:30:00Z"
+balance = 4250.75
+is_active = true
+tags = ["premium", "early-adopter"]
+
+[address]
+city = "San Francisco"
+country = "US"`,
+    api: `[meta]
+page = 1
+per_page = 2
+took_ms = 34
+
+[links]
+next = "/api/v1/courses?page=2"
+
+[[data.results]]
+id = 1
+title = "Intro to AI"
+score = 9.2
+
+[[data.results]]
+id = 2
+title = "ML 101"
+score = 8.7`,
+    error: `request_id = "req_7fh2k"
+
+[error]
+code = 422
+message = "Validation failed"
+
+[[error.details]]
+field = "email"
+reason = "Invalid email format"
+
+[[error.details]]
+field = "age"
+reason = "Must be between 18 and 120"`,
+    list: `[[items]]
+user_id = "u1"
+name = "Bob"
+score = 98
+country = "UK"
+
+[[items]]
+user_id = "u2"
+name = "Carol"
+score = 87
+country = "DE"
+
+[[items]]
+user_id = "u3"
+name = "Dave"
+score = 73
+country = "US"`,
+  },
+};
+
+// ── minimal inline TOML parser ─────────────────────────────────────────────
+// Handles the common subset: key = value, [section], [[array]]
+function parseTOML(text) {
+  const root   = {};
+  let   cur    = root;
+  let   arrKey = null;
+  let   arrRef = null;
+
+  const lines = text.split('\n');
+  for (let raw of lines) {
+    const line = raw.trim();
+    if (!line || line.startsWith('#')) continue;
+
+    // [[array of tables]]
+    const arrMatch = line.match(/^\[\[(.+)\]\]$/);
+    if (arrMatch) {
+      const parts = arrMatch[1].trim().split('.');
+      let obj = root;
+      for (let i = 0; i < parts.length - 1; i++) {
+        if (!obj[parts[i]]) obj[parts[i]] = {};
+        obj = obj[parts[i]];
+      }
+      const last = parts[parts.length - 1];
+      if (!Array.isArray(obj[last])) obj[last] = [];
+      const newEntry = {};
+      obj[last].push(newEntry);
+      cur = newEntry;
+      arrKey = null;
+      continue;
+    }
+
+    // [section]
+    const secMatch = line.match(/^\[(.+)\]$/);
+    if (secMatch) {
+      const parts = secMatch[1].trim().split('.');
+      cur = root;
+      for (const p of parts) {
+        if (!cur[p]) cur[p] = {};
+        cur = cur[p];
+      }
+      arrKey = null;
+      continue;
+    }
+
+    // key = value
+    const eqIdx = line.indexOf('=');
+    if (eqIdx < 0) continue;
+    const key = line.slice(0, eqIdx).trim();
+    const val = line.slice(eqIdx + 1).trim();
+    cur[key] = parseTOMLValue(val);
+  }
+  return root;
+}
+
+function parseTOMLValue(val) {
+  if (val === 'true')  return true;
+  if (val === 'false') return false;
+  if (/^-?\d+\.\d+$/.test(val)) return parseFloat(val);
+  if (/^-?\d+$/.test(val))      return parseInt(val, 10);
+  if (val.startsWith('"') && val.endsWith('"'))   return val.slice(1,-1).replace(/\\n/g,'\n').replace(/\\t/g,'\t');
+  if (val.startsWith("'") && val.endsWith("'"))   return val.slice(1,-1);
+  if (val.startsWith('[') && val.endsWith(']')) {
+    const inner = val.slice(1,-1).trim();
+    if (!inner) return [];
+    return inner.split(',').map(s => parseTOMLValue(s.trim()));
+  }
+  return val;
+}
+
+// ── state ────────────────────────────────────────────────────────────────────
+let currentFmt = 'json';
+
+function switchInputFormat(fmt) {
+  currentFmt = fmt;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  loadSample('user'); // reload current sample in new format
+  document.getElementById('output').textContent = 'Your output will appear here…';
+  document.getElementById('output').className = 'placeholder';
+}
+
+function loadSample(key) {
+  document.getElementById('input').value = SAMPLES[currentFmt][key] || '';
+}
+
+// ── parse input ──────────────────────────────────────────────────────────────
+function parseInput(text, fmt) {
+  if (fmt === 'yaml') {
+    if (typeof jsyaml === 'undefined') throw new Error('js-yaml failed to load');
+    return jsyaml.load(text);
+  }
+  if (fmt === 'toml') {
+    return parseTOML(text);
+  }
+  return JSON.parse(text);
+}
+
+// ── humanizer (client-side, mirrors humanizer.js) ────────────────────────────
+function fmtLabel(fmt) {
+  if (fmt === 'yaml') return 'YAML';
+  if (fmt === 'toml') return 'TOML';
+  return 'data';
+}
+
+function detectCtx(k) {
+  k = k.toLowerCase();
+  if (/^(id|uuid|_id)$/.test(k))                       return 'identifier';
+  if (/(password|secret|token|key|hash)/i.test(k))     return 'sensitive';
+  if (/^(lat|latitude)$|_lat$/i.test(k))                return 'latitude';
+  if (/^(lon|lng|longitude)$|_lng$/i.test(k))           return 'longitude';
+  if (/(created|updated|modified|timestamp)(_at)?$|_at$|(^|_)(date|time|on)(_|$)|last_login|logged_at/i.test(k)) return 'datetime';
+  if (/(email|mail)$/i.test(k))                        return 'email';
+  if (/(price|cost|amount|balance|fee)/i.test(k))      return 'money';
+  if (/(count|qty|total|num)/i.test(k))                return 'count';
+  if (/(age)$/i.test(k))                               return 'age';
+  if (/(rating|score|rank)/i.test(k))                  return 'rating';
+  return 'generic';
+}
+
+function fmtKey(k) {
+  return k.replace(/([A-Z])/g,' $1').replace(/[_\-]+/g,' ').trim().toLowerCase();
+}
+
+function fmtVal(v, key='') {
+  if (v === null || v === undefined) return 'not specified';
+  if (v === '') return 'empty';
+  const ctx = detectCtx(key);
+  if (typeof v === 'boolean') return v ? 'yes' : 'no';
+  if (ctx === 'sensitive') return '*** (hidden)';
+  if (ctx === 'money' && typeof v==='number') {
+    return v>=1e6?`$${(v/1e6).toFixed(2)}M`:v>=1e3?`$${(v/1e3).toFixed(1)}K`:`$${v.toFixed(2)}`;
+  }
+  if (ctx === 'age'    && typeof v==='number') return `${v} year${v!==1?'s':''} old`;
+  if (ctx === 'rating' && typeof v==='number') return `${v}/10`;
+  if (ctx === 'datetime' && typeof v==='string') {
+    try { const d=new Date(v); if(!isNaN(d)) return d.toLocaleString('en-US',{year:'numeric',month:'long',day:'numeric'}); } catch{}
+  }
+  if (ctx === 'email') return `email: ${v}`;
+  if (Array.isArray(v)) {
+    if (!v.length) return 'none';
+    if (v.every(x=>typeof x!=='object')) return v.join(', ');
+    return `${v.length} item(s)`;
+  }
+  if (typeof v==='object') return `{${Object.keys(v).length} field(s)}`;
+  if (typeof v==='number') return v.toLocaleString();
+  if (typeof v==='string' && v.length>150) return v.slice(0,150)+'…';
+  return String(v);
+}
+
+function objLines(obj, depth=0) {
+  const pfx='  '.repeat(depth), lines=[];
+  for (const [k,v] of Object.entries(obj)) {
+    const label = fmtKey(k);
+    if (Array.isArray(v) && v.length && typeof v[0]==='object') {
+      lines.push(`${pfx}• ${cap(label)}: ${v.length} entr${v.length===1?'y':'ies'}`);
+      v.slice(0,3).forEach((it,i) => {
+        lines.push(`${pfx}  [${i+1}] ${objLines(it,0).join(' ').slice(0,120)}`);
+      });
+      if (v.length>3) lines.push(`${pfx}  … and ${v.length-3} more`);
+    } else if (v && typeof v==='object' && !Array.isArray(v)) {
+      lines.push(`${pfx}• ${cap(label)}:`);
+      lines.push(...objLines(v,depth+1));
+    } else {
+      lines.push(`${pfx}• ${cap(label)}: ${fmtVal(v,k)}`);
+    }
+  }
+  return lines;
+}
+
+function cap(s) { return s?s[0].toUpperCase()+s.slice(1):'' }
+
+function humanizeData(data, fmt, outFmt) {
+  const lbl = fmtLabel(fmt);
+  let intro='', body='';
+
+  if (Array.isArray(data)) {
+    intro = `This ${lbl} contains a list of ${data.length} record${data.length!==1?'s':''}.`;
+    const limit = Math.min(data.length, 10);
+    const lines = [];
+    for(let i=0;i<limit;i++){
+      if (typeof data[i]==='object') lines.push(`\nRecord ${i+1}:\n${objLines(data[i],1).join('\n')}`);
+      else lines.push(`\nItem ${i+1}: ${fmtVal(data[i])}`);
+    }
+    if (data.length>10) lines.push(`\n… and ${data.length-10} more records`);
+    body = lines.join('');
+  } else if (data && typeof data==='object') {
+    const keys = Object.keys(data);
+    if ('error' in data || 'errors' in data)
+      intro=`This ${lbl} describes an error or failure response.`;
+    else if ('data' in data && ('meta' in data||'links' in data))
+      intro=`This ${lbl} is an API response with data and metadata.`;
+    else
+      intro=`This ${lbl} contains a structured object with ${keys.length} field${keys.length!==1?'s':''}.`;
+    body = '\n' + objLines(data,0).join('\n');
+  } else {
+    return `This ${lbl} contains a single value: ${data}`;
+  }
+
+  const text = `${intro}\n${body}`;
+
+  if (outFmt==='markdown') {
+    return `# ${lbl.toUpperCase()} Analysis\n\n## Summary\n\n${text}\n\n---\n*Processed by json-humanized (local engine)*`;
+  }
+  if (outFmt==='story') {
+    return `${'━'.repeat(52)}\n  📖  THE ${lbl.toUpperCase()} STORY\n${'━'.repeat(52)}\n\n${text}\n\n${'━'.repeat(52)}`;
+  }
+  if (outFmt==='sentence') {
+    if (Array.isArray(data)) return `This ${lbl} lists ${data.length} record${data.length!==1?'s':''}.`;
+    const pairs=Object.entries(data).filter(([,v])=>typeof v!=='object'&&v!==null&&v!=='').slice(0,5);
+    const parts=pairs.map(([k,v])=>fmtKey(k)+' is '+fmtVal(v,k));
+    if (!parts.length) return `This ${lbl} is an object.`;
+    const last=parts.pop();
+    return `This ${lbl} describes a record where ${parts.length?parts.join(', ')+', and ':''}${last}.`;
+  }
+  if (outFmt==='csv') {
+    const escaped=text.replace(/"/g,'""');
+    return 'format='+currentFmt+',engine=local,humanized="'+escaped+'"';
+  }
+  if (outFmt==='html') {
+    function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+    const body=escH(text).replace(/\n/g,'<br>\n');
+    return '<article class="jh-output"><h2>'+lbl.toUpperCase()+' Summary</h2><div>'+body+'</div></article>';
+  }
+  return text;
+}
+
+// ── run ──────────────────────────────────────────────────────────────────────
+async function run() {
+  const raw    = document.getElementById('input').value.trim();
+  const outFmt = document.getElementById('sel-format').value;
+  const out    = document.getElementById('output');
+  const btn    = document.getElementById('run-btn');
+
+  if (!raw) { out.textContent='⚠  Paste some input first'; out.className='error'; return; }
+
+  let data;
+  try {
+    data = parseInput(raw, currentFmt);
+  } catch(e) {
+    out.textContent = `✖ Invalid ${currentFmt.toUpperCase()}: ${e.message}`;
+    out.className = 'error';
+    return;
+  }
+
+  // info bar
+  const keys = Array.isArray(data)?data.length:typeof data==='object'?Object.keys(data).length:1;
+  document.getElementById('s-fmt').innerHTML   = `format: <span class="hi">${currentFmt.toUpperCase()}</span>`;
+  document.getElementById('s-type').textContent = `type: ${Array.isArray(data)?'array':typeof data}`;
+  document.getElementById('s-keys').textContent = Array.isArray(data)?`items: ${keys}`:`fields: ${keys}`;
+
+  btn.disabled = true;
+  out.className = 'loading';
+  out.textContent = 'Humanizing…';
+  const t0 = performance.now();
+
+  try {
+    await new Promise(r => setTimeout(r, 40)); // let spinner render
+    const result = humanizeData(data, currentFmt, outFmt);
+    const ms = (performance.now()-t0).toFixed(0);
+    out.textContent = result;
+    out.className = '';
+    document.getElementById('s-time').innerHTML = `time: <span class="ok">${ms}ms</span>`;
+  } catch(e) {
+    out.textContent = '✖ ' + e.message;
+    out.className = 'error';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function copyOutput() {
+  const txt = document.getElementById('output').textContent;
+  if (!txt || document.getElementById('output').classList.contains('placeholder')) return;
+  navigator.clipboard.writeText(txt).catch(()=>{});
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey||e.metaKey) && e.key==='Enter') run();
+});
+
+// init
+loadSample('user');
+</script>
+</body>
+</html>
