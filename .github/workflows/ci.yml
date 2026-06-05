@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, dev]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    name: Node ${{ matrix.node }} — ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [16, 18, 20, 22]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Core tests (43)
+        run: node test/index.test.js
+
+      - name: Full audit (88)
+        run: node test/full_audit.js
+
+      - name: Cross-file consistency (133)
+        run: node test/final_check.js
+
+      - name: Syntax check all source files
+        run: |
+          node --check src/index.js
+          node --check src/humanizer.js
+          node --check src/diff.js
+          node --check src/cache.js
+          node --check src/config.js
+          node --check src/watch.js
+          node --check src/parsers/index.js
+          node --check src/formatters/index.js
+          node --check src/formatters/template.js
+          node --check src/strategies/ai.js
+          node --check src/strategies/openai.js
+          node --check src/strategies/ollama.js
+          node --check bin/cli.js
+
+  release-check:
+    name: Release dry-run
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check what npm pack includes
+        run: npm pack --dry-run
+
+      - name: Verify package.json fields
+        run: |
+          node -e "
+          const pkg = require('./package.json');
+          const required = ['name','version','description','main','types','bin','engines','license','repository'];
+          const missing = required.filter(k => !pkg[k]);
+          if (missing.length) { console.error('Missing fields:', missing); process.exit(1); }
+          console.log('package.json OK — version', pkg.version);
+          "
